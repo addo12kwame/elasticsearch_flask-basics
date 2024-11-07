@@ -59,3 +59,5 @@ class Search:
 
     def retrieve_document(self, id, index_name='documents'):
         return self.es.get(index=index_name, id=id)
+
+
