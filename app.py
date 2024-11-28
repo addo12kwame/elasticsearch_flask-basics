@@ -40,13 +40,37 @@ def handle_search():
                 **filters
             }
         },
+        aggs={
+            'category-agg': {
+                'terms': {
+                    'field': 'category.keyword',
+                }
+            },
+            'year-agg': {
+                'date_histogram': {
+                    'field': 'updated_at',
+                    'calendar_interval': 'year',
+                    'format': 'yyyy',
+                },
+            },
+        },
         size=5,
         from_=from_
     )
+    aggs = {
+        'Category': {
+            bucket['key']: bucket['doc_count']
+            for bucket in results['aggregations']['category-agg']['buckets']
+        },
+        'Year': {
+            bucket['key_as_string']: bucket['doc_count']
+            for bucket in results['aggregations']['year-agg']['buckets']
+            if bucket['doc_count'] > 0
+        },
+    }
     return render_template('index.html', results=results['hits']['hits'],
                            query=query, from_=from_,
-                           total=results['hits']['total']['value'])
-
+                           total=results['hits']['total']['value'], aggs=aggs)
 @app.get('/document/<id>')
 def get_document(id):
     document = es.retrieve_document(id)
@@ -64,6 +88,7 @@ def reindex():
     response = es.reindex()
     print(f'Index with {len(response["items"])} documents created '
           f'in {response["took"]} milliseconds.')
+
 
 
 def extract_filters(query):
@@ -98,4 +123,4 @@ def extract_filters(query):
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True, host='0.0.0.0', port=5000)

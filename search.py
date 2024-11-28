@@ -4,17 +4,25 @@ import os
 import time
 
 from dotenv import load_dotenv
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch,exceptions
 
 load_dotenv()
 
 
 class Search:
     def __init__(self):
-        self.es = Elasticsearch("http://localhost:9200")  # <-- connection options need to be added here
-        client_info = self.es.info()
-        print('Connected to Elasticsearch!')
-        pprint(client_info.body)
+        self.es = Elasticsearch("http://elas:9200")  # <-- connection options need to be added here
+        retries = 1
+        while retries > 0:
+            try:
+                client_info = self.es.info()
+                print('Connected to Elasticsearch!')
+                pprint(client_info.body)
+                break
+            except exceptions.ConnectionError as e:
+                print(exceptions)
+                time.sleep(5)
+                retries-=1
 
     def create_index(self,index_name='documents'):
         """
@@ -29,7 +37,7 @@ class Search:
         """
 
         :param document: This is the document you want to index
-        :param index_name: This is the index name
+        :param index_name: This is the index name which is like the database
         :return: Elasticsearch service returns a response but we need the response[_'id'] the most
         """
         return self.es.index(index=index_name,body=document)

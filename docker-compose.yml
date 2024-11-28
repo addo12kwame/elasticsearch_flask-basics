@@ -1,0 +1,17 @@
+services:
+  elas:
+    image: d3bd8c11e2e7ead52c0200d6d7f2007874ab776e7fa62b643b97574f7ba81caf
+    container_name: elas
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9202:9200"
+  flask:
+    build: .
+    container_name: flask
+    ports:
+      - "5001:5000"
+    depends_on:
+      - elas
+
